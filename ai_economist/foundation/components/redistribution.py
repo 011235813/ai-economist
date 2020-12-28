@@ -90,6 +90,7 @@ class PeriodicBracketTax(BaseComponent):
             "model_wrapper" (default) uses the actions of the planner agent;
             "us-federal-single-filer-2018-scaled" uses US federal tax rates from 2018;
             "fixed-bracket-rates" uses the rates supplied in fixed_bracket_rates.
+            "external" uses the rates set using set_tax_rates()
         period (int): Length of a tax period in environment timesteps. Taxes are
             updated at the start of each period and collected/redistributed at the
             end of each period. Must be > 0. Default is 100 timesteps.
@@ -156,6 +157,7 @@ class PeriodicBracketTax(BaseComponent):
             "model_wrapper",
             "us-federal-single-filer-2018-scaled",
             "fixed-bracket-rates",
+            "external"
         ]
 
         # How many timesteps a tax period lasts
@@ -242,6 +244,9 @@ class PeriodicBracketTax(BaseComponent):
             self._fixed_bracket_rates = np.array(fixed_bracket_rates)
         else:
             self._fixed_bracket_rates = None
+
+        if self.tax_model == "external":
+            self.external_tax_rates = np.zeros(self.n_brackets)
 
         # === bracket tax rates ===
         self.curr_bracket_tax_rates = np.zeros_like(self.bracket_cutoffs)
@@ -339,6 +344,10 @@ class PeriodicBracketTax(BaseComponent):
         """Return whatever fixed bracket rates were set during initialization."""
         return self._fixed_bracket_rates
 
+    def set_tax_rates(self, tax_rates):
+        """Used by external object to set tax rates."""
+        self.external_tax_rates = tax_rates
+
     @property
     def curr_rate_max(self):
         """Maximum allowable tax rate, given current progress of any tax annealing."""
@@ -359,6 +368,9 @@ class PeriodicBracketTax(BaseComponent):
 
         if self.tax_model == "fixed-bracket-rates":
             return np.minimum(np.array(self.fixed_bracket_rates), self.curr_rate_max)
+
+        if self.tax_model == "external":
+            return np.minimum(np.array(self.external_tax_rates), self.curr_rate_max)
 
         raise NotImplementedError
 
