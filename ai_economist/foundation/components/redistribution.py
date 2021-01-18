@@ -370,7 +370,8 @@ class PeriodicBracketTax(BaseComponent):
             return np.minimum(np.array(self.fixed_bracket_rates), self.curr_rate_max)
 
         if self.tax_model == "external":
-            return np.minimum(np.array(self.external_tax_rates), self.curr_rate_max)
+            # return np.minimum(np.array(self.external_tax_rates), self.curr_rate_max)
+            return np.array(self.external_tax_rates) * self.curr_rate_max
 
         raise NotImplementedError
 
